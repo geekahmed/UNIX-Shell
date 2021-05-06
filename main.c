@@ -1,6 +1,15 @@
 #include <stdio.h>
 
-int main() {
-    printf("Hello, World!\n");
-    return 0;
+#define EXIT_SUCCESS 0
+
+void main_loop_interpreter(void);
+int main(int argc, char **argv) {
+    // Load config files.
+
+    // Main command loop interpreter.
+
+    // Pre-termination cleanup.
+    return EXIT_SUCCESS;
 }
+// void main_loop_interpreter(void)
+
