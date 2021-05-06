@@ -2,6 +2,8 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 #define BUFFER_SIZE_TOK 64
 #define DELIM_TOK "\t\r\n\a"
@@ -10,7 +12,13 @@ void main_loop_interpreter(void);
 char * read_line();
 char ** split_line(char *);
 int execute(char **);
-
+int launch(char **);
+int tefa_cd(char **);
+int tefa_exit(char **);
+int tefa_help(char **);
+int builtin_numbers();
+char *builtin_str[] = {"cd", "help", "exit"};
+int (*builtin_func[]) (char **) = {&tefa_cd,&tefa_help,&tefa_exit};
 int main(int argc, char **argv) {
     // Load config files.
     // Main command loop interpreter.
@@ -72,5 +80,60 @@ char ** split_line(char * line){
     }
     tokens[position] = NULL;
     return tokens;
+}
+int launch(char **args){
+    pid_t pid, wait_paid;
+    int status;
 
+    pid = fork();
+
+    if(pid == 0){
+        if(execvp(args[0], args) < 0){
+            perror("Error in Executing the program (Tefa Unix Shell)");
+        }
+        exit(EXIT_FAILURE);
+    } else if (pid < 0){
+        perror("Error in forking  (Tefa Unix Shell)");
+    } else {
+        do {
+            wait_paid = waitpid(pid, &status, WUNTRACED);
+        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+    }
+    return 1;
+}
+int builtin_numbers(){
+    return sizeof(builtin_str) / sizeof(char *);
+}
+int tefa_cd(char **args){
+    if(args[1] == NULL){
+        fprintf(stderr, "Tefa: expected argument to \"cd\"\n");
+    } else{
+        if (chdir(args[1]) != 0) {
+            perror("Tefa");
+        }
+    }
+    return 1;
+}
+int tefa_exit(char **args){
+    return 0;
+}
+int tefa_help(char **args){
+    printf("Tefa UNIX Shell\n");
+    printf("Type program names and arguments, and hit enter.\n");
+    printf("The following are built in:\n");
+    for (int i = 0; i < builtin_numbers(); i++) {
+        printf("  %s\n", builtin_str[i]);
+    }
+    printf("Use the man command for information on other programs.\n");
+    return 1;
+}
+int execute(char ** args) {
+    if (args[0] == NULL) return 1;
+
+    for (int i = 0; i < builtin_numbers(); i++) {
+        if (strcmp(args[0], builtin_str[i]) == 0) {
+            return (*builtin_func[i])(args);
+        }
+    }
+    return launch(args);
 }
