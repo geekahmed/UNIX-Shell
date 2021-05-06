@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <malloc.h>
+#include <stdlib.h>
 
-#define EXIT_SUCCESS 0
 
 void main_loop_interpreter(void);
 char * read_line();
@@ -22,6 +22,7 @@ void main_loop_interpreter(void){
     int status;
 
     do {
+        printf("Tefa> ");
         line = read_line();
         args = split_line(line);
         status = execute(args);
@@ -29,4 +30,17 @@ void main_loop_interpreter(void){
         free(args);
     } while (status);
 }
+char * read_line(){
+    char *line = NULL;
+    ssize_t buffer_size = 0;
 
+    if(getline(&line, &buffer_size, stdin) < 0){
+        if(feof(stdin))
+            exit(EXIT_SUCCESS);
+        else{
+            perror("Read Line Error");
+            exit(EXIT_FAILURE);
+        }
+    }
+    return line;
+}
